@@ -10,7 +10,6 @@ void main() {
         builder: (context) => const MyApp(),
       )
   );
-
   // runApp(MyApp());
 }
 
@@ -34,10 +33,10 @@ class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  MyHomePageState createState() => MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class MyHomePageState extends State<MyHomePage> {
   Map<dynamic, dynamic>? voterData;
   final TextEditingController _controller = TextEditingController();
   final ValueNotifier<List<String>> _suggestionsNotifier = ValueNotifier<List<String>>([]);
@@ -75,8 +74,28 @@ class _MyHomePageState extends State<MyHomePage> {
     _suggestionsNotifier.value = matches;
   }
 
+  void voterDetails(BuildContext context, voter, TextButton closeBtn) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Voter Details"),
+          content: VoterDetails(voter: voter, cnic: _controller.text),
+          actions: [closeBtn]
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    var closeBtn = TextButton(
+      onPressed: () {
+        Navigator.pop(context);
+      },
+      child: const Text('Close'),
+    );
+
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
@@ -143,10 +162,11 @@ class _MyHomePageState extends State<MyHomePage> {
                                         onTap: () {
                                           _controller.text = suggestion;
                                           updateSuggestions(suggestion);
+                                          final voter = voterData![_controller.text];
+                                          voterDetails(context, voter, closeBtn);
                                         },
                                       ),
-                                    )
-                                    .toList(),
+                                    ).toList(),
                               ),
                             );
                           },
@@ -155,87 +175,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           onPressed: () {
                             final voter = voterData![_controller.text];
                             if (voter != null) {
-                              showDialog(
-                                context: context,
-                                builder: (context) {
-                                  return AlertDialog(
-                                    title: const Text("Voter Details"),
-                                    content: Table(
-                                        border: TableBorder.all(width: 1.5, color: Colors.black),
-                                        children: [
-                                          TableRow(children: [
-                                            const Padding(
-                                              padding: EdgeInsets.all(8.0),
-                                              child: Text("Name "),
-                                            ),
-                                            Padding(
-                                              padding: const EdgeInsets.all(8.0),
-                                              child: Text(voter[4].toString()),
-                                            ),
-                                          ]),
-                                          TableRow(children: [
-                                            const Padding(
-                                              padding: EdgeInsets.all(8.0),
-                                              child: Text("CNIC "),
-                                            ),
-                                            Padding(
-                                              padding: const EdgeInsets.all(8.0),
-                                              child: Text(_controller.text),
-                                            ),
-                                          ]),
-                                          TableRow(children: [
-                                            const Padding(
-                                              padding: EdgeInsets.all(8.0),
-                                              child: Text("Vote Number "),
-                                            ),
-                                            Padding(
-                                              padding: const EdgeInsets.all(8.0),
-                                              child: Text(voter[3].toString()),
-                                            ),
-                                          ]),
-                                          TableRow(children: [
-                                            const Padding(
-                                              padding: EdgeInsets.all(8.0),
-                                              child: Text("Book Number "),
-                                            ),
-                                            Padding(
-                                              padding: const EdgeInsets.all(8.0),
-                                              child: Text(voter[1].toString()),
-                                            ),
-                                          ]),
-                                          TableRow(children: [
-                                            const Padding(
-                                              padding: EdgeInsets.all(8.0),
-                                              child: Text("School "),
-                                            ),
-                                            Padding(
-                                              padding: const EdgeInsets.all(8.0),
-                                              child: Text(voter[2].toString()),
-                                            ),
-                                          ]),
-                                          TableRow(children: [
-                                            const Padding(
-                                              padding: EdgeInsets.all(8.0),
-                                              child: Text("Zone "),
-                                            ),
-                                            Padding(
-                                              padding: const EdgeInsets.all(8.0),
-                                              child: Text(voter[0].toString()),
-                                            ),
-                                          ]),
-                                        ],
-                                      ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.pop(context);
-                                        },
-                                        child: const Text('Close'),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
+                              voterDetails(context, voter, closeBtn);
                             } else {
                               showDialog(
                                 context: context,
@@ -243,14 +183,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                   return AlertDialog(
                                     title: const Text("Voter Not Found"),
                                     content: const Text("No voter found with the provided CNIC."),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.pop(context);
-                                        },
-                                        child: const Text('Close'),
-                                      ),
-                                    ],
+                                    actions: [closeBtn]
                                   );
                                 },
                               );
@@ -275,5 +208,38 @@ class _MyHomePageState extends State<MyHomePage> {
         bottomSheet: const Text("© Gul Alam Khan ❤️ @AN", style: TextStyle(fontSize: 12)),
       ),
     );
+  }
+}
+// 279
+class VoterDetails extends StatelessWidget{
+  final List voter;
+  final String cnic;
+  const VoterDetails({super.key, required this.voter, required this.cnic});
+
+  TableRow tableRow(label, data){
+    return TableRow(children: [
+      Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Text(label),
+      ),
+      Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Text(data),
+      ),
+    ]);
+  }
+  @override
+  Widget build(BuildContext context){
+    return Table(
+        border: TableBorder.all(width: 1.5, color: Colors.black),
+        children: [
+          tableRow("Name ", voter[4].toString()),
+          tableRow("CNIC ", cnic),
+          tableRow("Vote Number ", voter[3].toString()),
+          tableRow("Book Number ", voter[1].toString()),
+          tableRow("School ", voter[2].toString()),
+          tableRow("Zone ", voter[0].toString())
+        ],
+      );
   }
 }
